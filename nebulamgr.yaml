@@ -7,10 +7,12 @@ ca_cert:
 cidr: "24"
 lighthouse:
       name: "lighthouse"
-      address: "10.10.10.1"
       remote: "45.76.121.99"
       remote_port: "4242"
 hosts:
+    - lighthouse:
+        address:  "10.10.10.1"
+        port: "4242"
     - manager:
         address:  "10.10.10.2"
         localnet: "192.168.0.0/24"
