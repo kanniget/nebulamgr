@@ -1,10 +1,12 @@
+#!/usr/bin/python
+
 import argparse
 import os
 import subprocess
+from configparser import ConfigParser
 
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from configparser import ConfigParser
 
 def backup_file(filename):
     if os.path.exists(filename+".old"):
