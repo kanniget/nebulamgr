@@ -15,6 +15,7 @@ def build_host(hostname, config):
             for name in host_entry:
                 if hostname == name:
                     host = host_entry[hostname]
+                    host["name"] = hostname
                     host["outbound"] = []
                     host["inbound"] = []
                     host["groups"] = []
@@ -108,7 +109,7 @@ def process(args):
     )
     directory = Config.get_config("output") + "/" + host["name"] + "/"
     os.makedirs(directory, mode=0o766, exist_ok=True)
-    f = open(directory + host["name"]+".conf", "w+")
+    f = open(directory + host["name"] + ".conf", "w+")
     f.write(lighthouseconf)
     f.close()
     for host_entry in Config.get_config(section="hosts"):
@@ -120,7 +121,7 @@ def process(args):
             )
             directory = Config.get_config("output") + "/" + entry + "/"
             os.makedirs(directory, mode=0o766, exist_ok=True)
-            f = open(directory + "main.conf", "w+")
+            f = open(directory + entry + ".conf", "w+")
             f.write(hostconf)
             f.close()
 
