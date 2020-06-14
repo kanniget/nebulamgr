@@ -1,3 +1,7 @@
+#
+#   See Nebula VPN here   https://github.com/slackhq/nebula
+#
+#
 Create all the required configs from the Nebula VPN from a central location/
 
 Create a config file similar to nebulamgr.yaml
