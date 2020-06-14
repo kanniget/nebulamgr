@@ -6,6 +6,10 @@ from jinja2 import Environment, PackageLoader, select_autoescape
 
 from configparser import ConfigParser
 
+def backup_file(filename):
+    if os.path.exists(filename+".old"):
+      os.remove(filename+".old")
+    os.rename(filename,filename+".old")
 
 def build_host(hostname, config):
     if hostname == "lighthouse":
@@ -40,15 +44,12 @@ def build_host(hostname, config):
     return host
 
 
-def sign_certs(hostname, config):
+def sign_certs(hostname, config, regen):
     print("     " + hostname)
-    if hostname == "lighthouse":
-        host = config.get_config("lighthouse")
-    else:
-        for host_entry in config.get_config(section="hosts"):
-            for name in host_entry:
-                if hostname == name:
-                    host = host_entry[hostname]
+    for host_entry in config.get_config(section="hosts"):
+        for name in host_entry:
+            if hostname == name:
+                host = host_entry[hostname]
     host_groups = []
     for group in config.get_config(section="groups"):
         for groupname in group:
@@ -78,6 +79,10 @@ def sign_certs(hostname, config):
                 groups = groups + "," + group
         args.append('"' + groups + '"')
     workdir = config.get_config("output") + "/" + hostname + "/"
+    if regen:
+        backup_file(workdir+hostname+".crt")
+        backup_file(workdir+hostname+".key")
+        
     result = subprocess.run(args, cwd=workdir, capture_output=True)
     if result.returncode > 0:
         print(" Cert gen failed with return code " + str(result.returncode))
@@ -85,51 +90,52 @@ def sign_certs(hostname, config):
         print(result.stderr.decode("utf-8"))
 
 
-def process(args):
+def build_conf(hostname, config):
     env = Environment(
         loader=PackageLoader("nebulamgr", "templates"),
         autoescape=select_autoescape(["html", "xml"]),
     )
-    Config = ConfigParser(args.config)
-    templatename = Config.get_config(section="template")
+    templatename = config.get_config(section="template")
     template = env.get_template(templatename)
-    lighthouse = Config.get_config(section="lighthouse")
-    hosts = Config.get_config(section="hosts")
-    groups = Config.get_config(section="groups")
-    security = Config.get_config(section="security")
+    lighthouse = config.get_config(section="lighthouse")
+    hosts = config.get_config(section="hosts")
+    groups = config.get_config(section="groups")
+    security = config.get_config(section="security")
 
-    #
-    # process lighthouse
-    #
-    print("generating configs")
-    print("     lighthouse")
-    host = build_host("lighthouse", Config)
-    lighthouseconf = template.render(
-        {"lighthouse": lighthouse, "is_lighthouse": "true", "host": host}
+    is_lighthouse = False
+    print("     " + hostname)
+    host = build_host(hostname, config)
+    if host["name"] == lighthouse["name"]:
+        is_lighthouse = True
+    hostconf = template.render(
+        {"lighthouse": lighthouse, "is_lighthouse": is_lighthouse, "host": host}
     )
-    directory = Config.get_config("output") + "/" + host["name"] + "/"
+    directory = config.get_config("output") + "/" + hostname + "/"
     os.makedirs(directory, mode=0o766, exist_ok=True)
-    f = open(directory + host["name"] + ".conf", "w+")
-    f.write(lighthouseconf)
+    f = open(directory + hostname + ".conf", "w+")
+    f.write(hostconf)
     f.close()
-    for host_entry in Config.get_config(section="hosts"):
-        for entry in host_entry:
-            print("     " + entry)
-            host = build_host(entry, Config)
-            hostconf = template.render(
-                {"lighthouse": lighthouse, "is_lighthouse": "false", "host": host}
-            )
-            directory = Config.get_config("output") + "/" + entry + "/"
-            os.makedirs(directory, mode=0o766, exist_ok=True)
-            f = open(directory + entry + ".conf", "w+")
-            f.write(hostconf)
-            f.close()
 
-    print("Signing Host Certificates")
-    sign_certs("lighthouse", Config)
+
+def process(args):
+    Config = ConfigParser(args.config)
+    regen=False
+    onlyhost = None
+    if args.host is not None:
+        onlyhost = args.host
+    if args.recert:
+        regen=True
+    print("Generating configs")
     for host_entry in Config.get_config(section="hosts"):
         for entry in host_entry:
-            sign_certs(entry, Config)
+            if onlyhost is None or onlyhost == entry:
+                build_conf(entry, Config)
+    print("Signing Host Certificates")
+    # sign_certs("lighthouse", Config)
+    for host_entry in Config.get_config(section="hosts"):
+        for entry in host_entry:
+            if onlyhost is None or onlyhost == entry:
+                sign_certs(entry, Config, regen)
     # print(lighthouseconf)
     # outbound:
     # - port: any
@@ -149,6 +155,8 @@ def main():
         "-V", "--version", help="show program version", action="store_true"
     )
     parser.add_argument("--config", help="config file")
+    parser.add_argument("--host", help="only process this host")
+    parser.add_argument("--recert", help="regenerate the certs", action="store_true", default=False)
 
     # Read arguments from the command line
     args = parser.parse_args()
