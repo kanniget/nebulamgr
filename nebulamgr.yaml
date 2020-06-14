@@ -7,7 +7,7 @@ ca_cert:
 cidr: "24"
 lighthouse:
       name: "lighthouse"
-      remote: "45.76.121.99"
+      remote: "X.X.X.X"   <-- replace this with the IP Address of your actual light house server  ( and remove this comment.....)
       remote_port: "4242"
 hosts:
     - lighthouse:
