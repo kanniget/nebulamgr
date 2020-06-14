@@ -1,6 +1,14 @@
 import yaml
 
 
+##
+#
+# Copied from   https://pypi.org/project/yaml-config-parser/  which has not been maintained in years 
+#
+# Fixed the Loader warnings.add()
+#
+##
+
 class ConfigParser(object):
 
     @classmethod
