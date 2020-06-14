@@ -84,8 +84,11 @@ def sign_certs(hostname, config, regen):
     if regen:
         backup_file(workdir+hostname+".crt")
         backup_file(workdir+hostname+".key")
-        
-    result = subprocess.run(args, cwd=workdir, capture_output=True)
+
+    try:        
+        result = subprocess.run(args, cwd=workdir, capture_output=True)
+    except TypeError:
+        result = subprocess.run(args, cwd=workdir)
     if result.returncode > 0:
         print(" Cert gen failed with return code " + str(result.returncode))
         print(result.stdout.decode("utf-8"))
