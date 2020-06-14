@@ -8,7 +8,7 @@ Create a config file similar to nebulamgr.yaml
 
 generate your nebula ca certs if you already haven't
 
-python nebularmgr.py --config=<your conf file>
+python nebularmgr.py --config=\<your conf file\>
 
 this will rebuild the config based on the template.jinja file ( as specified in the conf file above....   ) 
 
