@@ -1,0 +1,10 @@
+[Unit]
+Description=Slack's Nebula VPN service
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+ExecStart={{ nebula_bin_location }} -config {{ config_file }}
+
+[Install]
+WantedBy=multi-user.target
