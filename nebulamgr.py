@@ -159,7 +159,7 @@ def build_systemdUnit(hostname, config):
     templatename = config.get_config(section="systemdTemplate")
     unitName = config.get_config(section="unitFilename")
     template = env.get_template(templatename)
-    config_file = "/etc/nebula/" + hostname + ".conf"
+    config_file = config.get_config(section="host_config_location") + '/' + hostname + ".conf"
     nebula_bin_location = config.get_config(section="nebula_bin_location")
 
     print("     Systemd unit file for: " + hostname)

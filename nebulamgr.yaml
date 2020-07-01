@@ -5,6 +5,7 @@ unitFilename: "nebulaVPN.service"
 systemdUnitOutput: "/etc/systemd/system"
 nebula-cert: "/opt/nebula/bin/nebula-cert"
 nebula_bin_location: "/opt/nebula/bin/nebula"
+host_config_location: "/etc/nebula/"
 ca_cert:
   crt: "/opt/nebula/certs/ca.crt"
   key: "/opt/nebula/certs/ca.key"
