@@ -1,4 +1,4 @@
-#!/usr/bin/python3.6
+#!/usr/bin/python3
 
 import argparse
 import os
@@ -127,6 +127,29 @@ def build_conf(hostname, config):
     f.write(hostconf)
     f.close()
 
+def build_systemdUnit(hostname, config):
+    env = Environment(
+        loader=PackageLoader("nebulamgr", "templates"),
+        autoescape=select_autoescape(["html", "xml"]),
+    )
+
+    templatename = config.get_config(section="systemdTemplate")
+    unitName = config.get_config(section="unitFilename")
+    template = env.get_template(templatename)
+    config_file = "/etc/nebula/" + hostname + ".conf"
+    nebula_bin_location = config.get_config(section="nebula_bin_location")
+
+    print("     Systemd unit file for: " + hostname)
+    unitconf = template.render({
+        "config_file": config_file,
+        "nebula_bin_location": nebula_bin_location
+        })
+
+    directory = config.get_config("output") + "/" + hostname + "/" + config.get_config("systemdUnitOutput") + "/"
+    os.makedirs(directory, mode=0o766, exist_ok=True)
+    f = open(directory + unitName, "w+")
+    f.write(unitconf)
+    f.close()
 
 def process(args):
     Config = ConfigParser(args.config)
@@ -147,6 +170,12 @@ def process(args):
         for entry in host_entry:
             if onlyhost is None or onlyhost == entry:
                 sign_certs(entry, Config, regen)
+
+    print("Generating Systemd Unit files")
+    for host_entry in Config.get_config(section="hosts"):
+        for entry in host_entry:
+            if onlyhost is None or onlyhost == entry:
+                build_systemdUnit(entry, Config)
     # print(lighthouseconf)
     # outbound:
     # - port: any
@@ -175,6 +204,8 @@ def main():
     # Check for --version or -V
     if args.version:
         print("This is myprogram version 0.1")
+    if not args.config:
+        print("Plase see help option. Missing config file")
     else:
         process(args)
 
