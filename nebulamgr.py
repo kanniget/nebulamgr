@@ -7,6 +7,19 @@ from configparser import ConfigParser
 
 from jinja2 import Environment, PackageLoader, select_autoescape
 
+class Error(Exception):
+    """Base class for exceptions in this module."""
+    pass
+
+class ConfigError(Error):
+    """Exception raised for errors in the input.
+
+    Attributes:
+        message -- explanation of the error
+    """
+
+    def __init__(self, message):
+        self.message = message
 
 def backup_file(filename):
     if os.path.exists(filename+".old"):
@@ -19,18 +32,25 @@ def backup_file(filename):
     except FileNotFoundError:
         print(" No original file to backup")
 
+def resolveLighthouseAddress(lighthousename, config):
+    for host_entry in config.get_config(section="hosts"):
+        for name in host_entry:
+            if lighthousename == name:
+                return host_entry[name]["address"]
+    raise ConfigError("Lighthouse name not found in host list")     
+
 def build_host(hostname, config):
-    if hostname == "lighthouse":
-        host = {"name": hostname, "groups": [], "outbound": [], "inbound": []}
-    else:
-        for host_entry in config.get_config(section="hosts"):
-            for name in host_entry:
-                if hostname == name:
-                    host = host_entry[hostname]
-                    host["name"] = hostname
-                    host["outbound"] = []
-                    host["inbound"] = []
-                    host["groups"] = []
+    # if hostname == "lighthouse":
+    #     host = {"name": hostname, "groups": [], "outbound": [], "inbound": []}
+    # else:
+    for host_entry in config.get_config(section="hosts"):
+        for name in host_entry:
+            if hostname == name:
+                host = host_entry[hostname]
+                host["name"] = hostname
+                host["outbound"] = []
+                host["inbound"] = []
+                host["groups"] = []
     for group in config.get_config(section="groups"):
         for groupname in group:
             for member in group[groupname]:
@@ -96,9 +116,11 @@ def sign_certs(hostname, config, regen):
     except TypeError:
         result = subprocess.run(args, cwd=workdir)
     if result.returncode > 0:
-        print(" Cert gen failed with return code " + str(result.returncode))
-        print(result.stdout.decode("utf-8"))
-        print(result.stderr.decode("utf-8"))
+        if ( result.returncode == 1)  and regen:
+            raise ConfigError("Cert gen failed with return code " + str(result.returncode))
+        # print(" Cert gen failed with return code " + str(result.returncode))
+        # print(result.stdout.decode("utf-8"))
+        # print(result.stderr.decode("utf-8"))
 
 
 def build_conf(hostname, config):
@@ -116,6 +138,7 @@ def build_conf(hostname, config):
     is_lighthouse = False
     print("     " + hostname)
     host = build_host(hostname, config)
+    lighthouse["address"]=resolveLighthouseAddress(lighthouse["name"], config)
     if host["name"] == lighthouse["name"]:
         is_lighthouse = True
     hostconf = template.render(
@@ -176,16 +199,6 @@ def process(args):
         for entry in host_entry:
             if onlyhost is None or onlyhost == entry:
                 build_systemdUnit(entry, Config)
-    # print(lighthouseconf)
-    # outbound:
-    # - port: any
-    #   proto: any
-    #   host: any
-    # inbound:
-    #     # Allow icmp between any nebula hosts
-    #     - port: any
-    #     proto: icmp
-    #     host: any
 
 
 def main():
@@ -203,12 +216,15 @@ def main():
 
     # Check for --version or -V
     if args.version:
-        print("This is myprogram version 0.1")
+        print("This is nebulamgr version 0.2")
     if not args.config:
-        print("Plase see help option. Missing config file")
+        print("Please see help option. Missing config file")
     else:
-        process(args)
-
+        try:
+            process(args)
+        except ConfigError as e:
+            print(" CONFIG ERROR: " + e.message)
+            return
     print("Yay I Win!")
 
 
