@@ -10,8 +10,14 @@ from jinja2 import Environment, PackageLoader, select_autoescape
 
 def backup_file(filename):
     if os.path.exists(filename+".old"):
-      os.remove(filename+".old")
-    os.rename(filename,filename+".old")
+       try:    
+          os.remove(filename+".old")
+       except FileNotFoundError:
+          print(" No backup file to remove")
+    try:    
+        os.rename(filename,filename+".old")
+    except FileNotFoundError:
+        print(" No original file to backup")
 
 def build_host(hostname, config):
     if hostname == "lighthouse":
