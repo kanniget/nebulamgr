@@ -11,12 +11,19 @@ ca_cert:
   key: "/opt/nebula/certs/ca.key"
 cidr: "24"
 lighthouse:
-      name: "lighthouse"
-      remote: "X.X.X.X"   <-- replace this with the IP Address of your actual light house server  ( and remove this comment.....)
-      remote_port: "4242"
+  # One entry here for each lighthouse you have....
+    - lighthouse:
+        remote: "X.X.X.X"   #<-- replace this with the IP Address of your actual light house server  ( and remove this comment.....)
+        remote_port: "4242"
+    - lighthouse2:   
+        remote: "X.X.X.X"   #<-- replace this with the IP Address of your actual light house server  ( and remove this comment.....)
+        remote_port: "4242"
 hosts:
     - lighthouse:
         address:  "10.10.10.1"
+        port: "4242"
+    - lighthouse2:
+        address:  "10.10.10.99"
         port: "4242"
     - manager:
         address:  "10.10.10.2"

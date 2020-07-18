@@ -32,10 +32,17 @@ def backup_file(filename):
     except FileNotFoundError:
         print(" No original file to backup")
 
-def resolveLighthouseAddress(lighthousename, config):
+def isLightHouse(hostname, lighthouses):
+
+    for lighthouse_name in lighthouses:
+        if hostname == lighthouse_name["name"]:
+            return True
+    return False
+
+def resolveLighthouseAddress(lighthouse_name, config):
     for host_entry in config.get_config(section="hosts"):
         for name in host_entry:
-            if lighthousename == name:
+            if lighthouse_name == name:
                 return host_entry[name]["address"]
     raise ConfigError("Lighthouse name not found in host list")     
 
@@ -135,14 +142,12 @@ def build_conf(hostname, config):
     groups = config.get_config(section="groups")
     security = config.get_config(section="security")
 
-    is_lighthouse = False
-    print("     " + hostname)
     host = build_host(hostname, config)
-    lighthouse["address"]=resolveLighthouseAddress(lighthouse["name"], config)
-    if host["name"] == lighthouse["name"]:
-        is_lighthouse = True
+    for lighthouse_name in lighthouse: 
+        lighthouse_name["address"]=resolveLighthouseAddress(lighthouse_name["name"], config)
+
     hostconf = template.render(
-        {"lighthouse": lighthouse, "is_lighthouse": is_lighthouse, "host": host}
+        {"lighthouse": lighthouse, "is_lighthouse": isLightHouse(hostname, lighthouse), "host": host}
     )
     directory = config.get_config("output") + "/" + hostname + "/"
     os.makedirs(directory, mode=0o766, exist_ok=True)
