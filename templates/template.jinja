@@ -17,8 +17,8 @@ pki:
 #   "{nebula ip}": ["{routable ip/dns name}:{routable port}"]
 # Example, if your lighthouse has the nebula IP of 192.168.100.1 and has the real ip address of 100.64.22.11 and runs on port 4242:
 static_host_map:
-  "{{ lighthouse.address }}": ["{{ lighthouse.remote }}:{{ lighthouse.remote_port }}"]
-
+{% for entry in lighthouse %}  "{{ entry.address }}": ["{{ entry.remote }}:{{ entry.remote_port }}"]
+{% endfor %}
 
 lighthouse:
   # am_lighthouse is used to enable lighthouse functionality for a node. This should ONLY be true on nodes
@@ -38,9 +38,7 @@ lighthouse:
   # IMPORTANT: THIS SHOULD BE EMPTY ON LIGHTHOUSE NODES
   # IMPORTANT2: THIS SHOULD BE LIGHTHOUSES' NEBULA IPs, NOT LIGHTHOUSES' REAL ROUTABLE IPs
   hosts:
-  {% if is_lighthouse %}
-    - "{{ lighthouse.address }}"
-  {% endif %}
+  {% if is_lighthouse %}    - "{{ lighthouse.address }}"  {% endif %}
 
   # remote_allow_list allows you to control ip ranges that this node will
   # consider when handshaking to another node. By default, any remote IPs are
@@ -106,9 +104,7 @@ punchy:
 
 # Local range is used to define a hint about the local network range, which speeds up discovering the fastest
 # path to a network adjacent nebula node.
-{% if host.localnet %}
-local_range: "{{host.localnet}}"
-{% endif %}
+{% if host.localnet %}local_range: "{{host.localnet}}"{% endif %}
 
 # sshd can expose informational and administrative functions via ssh this is a
 #sshd:
@@ -212,25 +208,21 @@ firewall:
   #   ca_sha: An issuing CA shasum
 
   outbound:
-{% for rule in host.outbound %}
-    - port: "{{ rule.port }}"
+{% for rule in host.outbound %}    - port: "{{ rule.port }}"
       proto: "{{ rule.proto }}"
       host: "{{ rule.host }}"
 {% endfor %}
 
   inbound:
 {% for rule in host.inbound %} {% if rule.comment %} # {{ rule.comment }} {% endif %}
-  {% if rule.group %}
-    - port: "{{ rule.port }}"
+  {% if rule.group %}  - port: "{{ rule.port }}"
       proto: "{{ rule.proto }}"
       group: "{{ rule.group }}"
-  {% elif rule.groups %}
-    - port: "{{ rule.port }}"
+  {% elif rule.groups %}  - port: "{{ rule.port }}"
       proto: "{{ rule.proto }}"
       groups: {% for group in rule.groups %} 
       - {{ group }}" {% endfor %}
-  {% else %}  
-    - port: "{{ rule.port }}"
+  {% else %}  - port: "{{ rule.port }}"
       proto: "{{ rule.proto }}"
       host: "{{ rule.host }}"
   {% endif %}
