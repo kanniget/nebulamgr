@@ -12,12 +12,12 @@ ca_cert:
 cidr: "24"
 lighthouse:
   # One entry here for each lighthouse you have....
-    - lighthouse:
-        remote: "X.X.X.X"   #<-- replace this with the IP Address of your actual light house server  ( and remove this comment.....)
-        remote_port: "4242"
-    - lighthouse2:   
-        remote: "X.X.X.X"   #<-- replace this with the IP Address of your actual light house server  ( and remove this comment.....)
-        remote_port: "4242"
+    - name: "lighthouse"
+      remote: "X.X.X.X"   #<-- replace this with the IP Address of your actual light house server  ( and remove this comment.....)
+      remote_port: "4242"
+    - name: "lighthouse2"   
+      remote: "X.X.X.X"   #<-- replace this with the IP Address of your actual light house server  ( and remove this comment.....)
+      remote_port: "4242"
 hosts:
     - lighthouse:
         address:  "10.10.10.1"
