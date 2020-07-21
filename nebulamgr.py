@@ -76,6 +76,8 @@ def build_host(hostname, config):
                     host[ruleclass].append(rule)
                 elif rule["destination"] == hostname:
                     host[ruleclass].append(rule)
+                elif rule["destination"] in host["groups"]:
+                    host[ruleclass].append(rule)
     return host
 
 
