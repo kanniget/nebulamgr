@@ -38,7 +38,8 @@ lighthouse:
   # IMPORTANT: THIS SHOULD BE EMPTY ON LIGHTHOUSE NODES
   # IMPORTANT2: THIS SHOULD BE LIGHTHOUSES' NEBULA IPs, NOT LIGHTHOUSES' REAL ROUTABLE IPs
   hosts:
-  {% if is_lighthouse %}    - "{{ lighthouse.address }}"  {% endif %}
+  {% if not is_lighthouse %}    {% for entry in lighthouse %} - "{{ entry.address }}"
+      {% endfor %}  {% endif %}
 
   # remote_allow_list allows you to control ip ranges that this node will
   # consider when handshaking to another node. By default, any remote IPs are
